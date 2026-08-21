@@ -20,8 +20,29 @@
     <button id="toast">Call ui.toast</button>
   </main>
   <script>
-    document.querySelector('#runtime').textContent = `Runtime ${ExtOS.runtimeVersion()}`;
-    document.querySelector('#toast').addEventListener('click', () => ExtOS.showToast('Capability granted'));
+    const pending = new Map();
+    let nextId = 1;
+
+    window.__extosReceive = source => {
+      const response = JSON.parse(source);
+      const request = pending.get(response.id);
+      if (!request) return;
+      pending.delete(response.id);
+      response.ok ? request.resolve(response.result) : request.reject(response.error);
+    };
+
+    const call = (method, params = {}) => new Promise((resolve, reject) => {
+      const id = String(nextId++);
+      pending.set(id, { resolve, reject });
+      ExtOSNative.postMessage(JSON.stringify({ id, method, params }));
+    });
+
+    call('runtime.version')
+      .then(result => document.querySelector('#runtime').textContent = `Runtime ${result.version}`)
+      .catch(error => document.querySelector('#runtime').textContent = error.message);
+    document.querySelector('#toast').addEventListener('click', () => {
+      call('ui.toast', { message: 'Capability granted' }).catch(console.error);
+    });
   </script>
 </body>
 </html>

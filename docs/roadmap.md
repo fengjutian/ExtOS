@@ -15,10 +15,10 @@ compilation in an Android-capable environment.
 ## Phase 1: local developer loop
 
 - replace asset URL loading with a controlled local origin;
-- define JSON request/response bridge protocol;
-- lifecycle events and structured errors;
+- define JSON request/response bridge protocol (initial draft implemented);
+- lifecycle events and structured errors (ready event and error envelope implemented);
 - Ext CLI: `create`, `dev`, `build`, and `install`;
-- package parser with ZIP safety limits;
+- package parser with ZIP path and expanded-size safety limits (implemented);
 - automated unit and instrumentation tests.
 
 Exit criterion: a developer can build and sideload an unsigned development

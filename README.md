@@ -21,6 +21,7 @@ small capability bridge.
 - `docs/product.md` — product definition and boundaries
 - `docs/architecture.md` — runtime architecture and trust boundaries
 - `docs/package-format.md` — initial `.ext` package specification
+- `docs/bridge-protocol.md` — asynchronous host/plugin message contract
 - `docs/roadmap.md` — delivery phases and acceptance criteria
 - `app/` — Android host and bundled example plugin
 
@@ -32,9 +33,10 @@ The included host demonstrates:
 2. enforcing the manifest's capability list;
 3. loading local plugin content in a WebView;
 4. exposing a narrow `ExtOS` JavaScript bridge;
-5. keeping navigation inside the packaged plugin.
+5. keeping navigation inside the packaged plugin;
+6. validating archive paths and bounded expanded content.
 
-The bridge currently offers only `runtime.version` and `ui.toast`. It is a
+The asynchronous bridge currently offers only `runtime.version` and `ui.toast`. It is a
 prototype API, not yet a security-complete third-party plugin sandbox.
 
 ## Build prerequisites

@@ -5,9 +5,12 @@ import android.os.Bundle
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import dev.extos.runtime.bridge.BridgeDispatcher
 import dev.extos.runtime.bridge.PluginBridge
 import dev.extos.runtime.model.ManifestParser
+import dev.extos.runtime.security.CapabilityPolicy
 
 class MainActivity : AppCompatActivity() {
     private lateinit var pluginView: WebView
@@ -35,8 +38,21 @@ class MainActivity : AppCompatActivity() {
                     view: WebView,
                     request: WebResourceRequest,
                 ): Boolean = !request.url.toString().startsWith(baseUrl)
+
+                override fun onPageFinished(view: WebView, url: String) {
+                    view.evaluateJavascript(
+                        "window.dispatchEvent(new CustomEvent('extosready'))",
+                        null,
+                    )
+                }
             }
-            addJavascriptInterface(PluginBridge(this@MainActivity, manifest), "ExtOS")
+            val policy = CapabilityPolicy(manifest, manifest.capabilities)
+            val dispatcher = BridgeDispatcher(policy) { message ->
+                runOnUiThread {
+                    Toast.makeText(this@MainActivity, message, Toast.LENGTH_SHORT).show()
+                }
+            }
+            addJavascriptInterface(PluginBridge(this, dispatcher), "ExtOSNative")
             loadDataWithBaseURL(baseUrl, entrySource, "text/html", "UTF-8", null)
         }
 
@@ -44,7 +60,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onDestroy() {
-        pluginView.removeJavascriptInterface("ExtOS")
+        pluginView.removeJavascriptInterface("ExtOSNative")
         pluginView.destroy()
         super.onDestroy()
     }
