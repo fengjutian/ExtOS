@@ -16,7 +16,10 @@ class PluginInstaller(
     private val packageReader: PluginPackageReader = PluginPackageReader(),
 ) {
     fun install(source: InputStream, activate: Boolean = true): InstalledPlugin {
-        val plugin = packageReader.read(source)
+        return install(packageReader.read(source), activate)
+    }
+
+    fun install(plugin: ValidatedPluginPackage, activate: Boolean = true): InstalledPlugin {
         val manifest = plugin.manifest
         val target = registry.versionDirectory(manifest.id, manifest.version)
         require(!Files.exists(target)) { "Plugin version is already installed" }
