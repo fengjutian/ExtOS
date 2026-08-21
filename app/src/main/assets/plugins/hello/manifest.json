@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "id": "dev.extos.hello",
+  "name": "Hello ExtOS",
+  "version": "0.1.0",
+  "runtime": "web",
+  "entry": "dist/index.html",
+  "minRuntimeVersion": "0.1.0",
+  "capabilities": ["runtime.version", "ui.toast"]
+}
