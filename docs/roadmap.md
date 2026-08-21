@@ -26,7 +26,8 @@ package without editing the host.
 
 ## Phase 2: user-safe installation
 
-- plugin registry and atomic upgrades;
+- plugin registry, staged installation, atomic activation, and rollback foundation
+  (implemented; Android UI integration remains);
 - plugin-scoped storage and data removal;
 - permission review and grant UI;
 - package hashing and publisher signatures;

@@ -28,6 +28,25 @@ file hashes, signatures, and runtime compatibility before activation.
 rollback. One version is active while the previous valid version may be retained
 for recovery.
 
+The on-disk draft layout is:
+
+```text
+plugins/
+  com.example.plugin/
+    active.json
+    versions/
+      1.0.0/
+      1.1.0/
+  .staging/
+```
+
+Installation validates the complete archive in memory, writes into a unique
+staging directory, and moves that directory into its immutable version location.
+Activation updates a small marker by atomic replacement where the filesystem
+supports it, with replacement rename as the compatibility fallback. A crash can
+therefore leave an inactive candidate version, but never overwrites the files of
+the currently active version.
+
 `PluginSession` owns one running plugin instance and its lifecycle. It binds a
 validated manifest and a user grant set to a WebView.
 
