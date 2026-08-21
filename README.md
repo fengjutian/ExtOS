@@ -3,9 +3,10 @@
 ExtOS is an extensible application runtime for Android. It runs signed,
 capability-based plugins inside a host-controlled environment.
 
-The project is currently in its first vertical-slice stage: an Android host
-loads a bundled web plugin, validates its manifest, and exposes a deliberately
-small capability bridge.
+The project is currently in its first usable vertical-slice stage: an Android
+host imports a local `.ext` package, validates and installs it, shows it in a
+launcher, and runs its active version behind a deliberately small capability
+bridge.
 
 ## Product principles
 
@@ -29,12 +30,14 @@ small capability bridge.
 
 The included host demonstrates:
 
-1. reading a plugin manifest;
-2. enforcing the manifest's capability list;
-3. loading local plugin content in a WebView;
-4. exposing a narrow `ExtOS` JavaScript bridge;
-5. keeping navigation inside the packaged plugin;
-6. validating archive paths and bounded expanded content.
+1. choosing and reviewing a local `.ext` package;
+2. reading a plugin manifest;
+3. enforcing the manifest's capability list and persisted user grants;
+4. installing immutable versions with an atomic active-version marker;
+5. loading plugin content from a controlled origin in a WebView;
+6. exposing a narrow `ExtOS` JavaScript bridge;
+7. blocking external navigation and subresources;
+8. validating archive paths and bounded expanded content.
 
 The asynchronous bridge currently offers only `runtime.version` and `ui.toast`. It is a
 prototype API, not yet a security-complete third-party plugin sandbox.
@@ -53,6 +56,15 @@ installation before running:
 gradle wrapper
 ./gradlew assembleDebug
 ```
+
+On Windows, build the included example into an installable development package:
+
+```text
+powershell -ExecutionPolicy Bypass -File tools/build-sample.ps1
+```
+
+The package is written to `build/sample/hello.ext`. It is unsigned and intended
+only for local development.
 
 ## Status
 

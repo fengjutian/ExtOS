@@ -66,6 +66,14 @@ class PluginInstallerTest {
         }
     }
 
+    @Test
+    fun registryRejectsPathLikePluginIdentifiers() {
+        val root = temporaryFolder.newFolder("plugins").toPath()
+        assertThrows(IllegalArgumentException::class.java) {
+            PluginRegistry(root).activeVersion("../outside")
+        }
+    }
+
     private fun pluginPackage(version: String): ByteArrayInputStream {
         val manifest = """
             {

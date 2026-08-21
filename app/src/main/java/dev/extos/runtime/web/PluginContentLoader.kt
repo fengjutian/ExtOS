@@ -8,11 +8,15 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.util.Locale
 
-class PluginContentLoader(pluginDirectory: Path) {
+class PluginContentLoader(pluginDirectory: Path, pluginId: String) {
     private val root = pluginDirectory.toRealPath()
+    private val host = "$pluginId.$HOST_SUFFIX"
+    val origin = "$SCHEME://$host/"
+
+    fun owns(uri: Uri): Boolean = uri.scheme == SCHEME && uri.host == host
 
     fun load(uri: Uri): WebResourceResponse {
-        if (uri.scheme != SCHEME || uri.host != HOST) return denied("Origin is not allowed")
+        if (!owns(uri)) return denied("Origin is not allowed")
         val relativePath = uri.pathSegments.joinToString("/")
         if (!isSafePath(relativePath)) return denied("Path is not allowed")
 
@@ -27,7 +31,14 @@ class PluginContentLoader(pluginDirectory: Path) {
             ?: FALLBACK_MIME_TYPES[extension]
             ?: "application/octet-stream"
         val encoding = if (mime.startsWith("text/") || mime in UTF8_MIME_TYPES) "UTF-8" else null
-        return WebResourceResponse(mime, encoding, Files.newInputStream(realPath))
+        return WebResourceResponse(
+            mime,
+            encoding,
+            200,
+            "OK",
+            SECURITY_HEADERS,
+            Files.newInputStream(realPath),
+        )
     }
 
     private fun isSafePath(path: String): Boolean =
@@ -47,10 +58,22 @@ class PluginContentLoader(pluginDirectory: Path) {
 
     companion object {
         const val SCHEME = "https"
-        const val HOST = "plugin.extos.local"
-        const val ORIGIN = "$SCHEME://$HOST/"
+        private const val HOST_SUFFIX = "plugin.extos.local"
+
+        fun blockedExternalRequest(): WebResourceResponse = WebResourceResponse(
+            "text/plain", "UTF-8", 403, "Forbidden",
+            mapOf("Cache-Control" to "no-store"),
+            ByteArrayInputStream("External resources are blocked".toByteArray()),
+        )
 
         private val UTF8_MIME_TYPES = setOf("application/javascript", "application/json", "image/svg+xml")
+        private val SECURITY_HEADERS = mapOf(
+            "Cache-Control" to "no-store",
+            "Content-Security-Policy" to "default-src 'self'; script-src 'self' 'unsafe-inline'; " +
+                "style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'none'; " +
+                "object-src 'none'; frame-src 'none'; base-uri 'none'",
+            "X-Content-Type-Options" to "nosniff",
+        )
         private val FALLBACK_MIME_TYPES = mapOf(
             "js" to "application/javascript",
             "json" to "application/json",

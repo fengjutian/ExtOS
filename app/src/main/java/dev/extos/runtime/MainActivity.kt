@@ -121,7 +121,7 @@ class MainActivity : AppCompatActivity() {
         Toast.makeText(this, "Inspecting package…", Toast.LENGTH_SHORT).show()
         Thread {
             val result = runCatching {
-                contentResolver.openInputStream(uri)?.use(PluginPackageReader()::read)
+                contentResolver.openInputStream(uri)?.use { PluginPackageReader().read(it) }
                     ?: error("The selected document could not be opened")
             }
             runOnUiThread { result.onSuccess(::confirmInstallation).onFailure(::showError) }
@@ -165,7 +165,7 @@ class MainActivity : AppCompatActivity() {
         val manifest = ManifestParser.parse(
             Files.readString(plugin.directory.resolve("manifest.json"), StandardCharsets.UTF_8),
         )
-        val contentLoader = PluginContentLoader(plugin.directory)
+        val contentLoader = PluginContentLoader(plugin.directory, manifest.id)
         val webView = WebView(this).apply {
             settings.javaScriptEnabled = true
             settings.allowFileAccess = false
@@ -176,16 +176,16 @@ class MainActivity : AppCompatActivity() {
                 override fun shouldInterceptRequest(
                     view: WebView,
                     request: WebResourceRequest,
-                ): WebResourceResponse? = if (
-                    request.url.scheme == PluginContentLoader.SCHEME &&
-                    request.url.host == PluginContentLoader.HOST
-                ) contentLoader.load(request.url) else null
+                ): WebResourceResponse? = if (contentLoader.owns(request.url)) {
+                    contentLoader.load(request.url)
+                } else {
+                    PluginContentLoader.blockedExternalRequest()
+                }
 
                 override fun shouldOverrideUrlLoading(
                     view: WebView,
                     request: WebResourceRequest,
-                ): Boolean = request.url.scheme != PluginContentLoader.SCHEME ||
-                    request.url.host != PluginContentLoader.HOST
+                ): Boolean = !contentLoader.owns(request.url)
 
                 override fun onPageFinished(view: WebView, url: String) {
                     view.evaluateJavascript(
@@ -201,7 +201,7 @@ class MainActivity : AppCompatActivity() {
                 }
             }
             addJavascriptInterface(PluginBridge(this, dispatcher), "ExtOSNative")
-            loadUrl(PluginContentLoader.ORIGIN + entry)
+            loadUrl(contentLoader.origin + entry)
         }
         pluginView = webView
         setContentView(webView)

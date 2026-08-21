@@ -14,7 +14,8 @@ compilation in an Android-capable environment.
 
 ## Phase 1: local developer loop
 
-- replace asset URL loading with a controlled local origin;
+- replace asset URL loading with a controlled local origin (implemented for
+  installed plugins; instrumentation tests remain);
 - define JSON request/response bridge protocol (initial draft implemented);
 - lifecycle events and structured errors (ready event and error envelope implemented);
 - Ext CLI: `create`, `dev`, `build`, and `install`;
@@ -28,6 +29,8 @@ package without editing the host.
 
 - plugin registry, staged installation, atomic activation, and rollback foundation
   (implemented; Android UI integration remains);
+- Android document picker, install review, capability grant persistence, launcher,
+  and active-plugin loading (implemented in source form);
 - plugin-scoped storage and data removal;
 - permission review and grant UI;
 - package hashing and publisher signatures;

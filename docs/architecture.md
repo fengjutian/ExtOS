@@ -83,14 +83,16 @@ AND parameters satisfy policy
 - file and content URL access are disabled unless a reviewed loader requires it;
 - plugin content is served from a controlled local origin;
 - external navigation is denied by default;
+- external subresources and direct network requests are denied by default;
 - mixed content and cleartext traffic are disabled;
 - debugging is enabled only in developer builds;
 - each plugin receives logically isolated storage.
 
-The initial bundled example reads a self-contained asset and assigns a synthetic
-HTTPS base URL. Before plugins can contain multiple files, this must be replaced
-by a controlled local origin such as `WebViewAssetLoader` and covered by
-isolation tests.
+Installed plugin resources are served through a plugin-specific intercepted
+synthetic HTTPS origin. Every resolved file must remain inside the active immutable version
+directory, including after canonical path and symbolic-link resolution. Default
+responses include a restrictive content security policy. Origin-isolation and
+navigation-escape instrumentation tests are still required.
 
 ## Lifecycle
 
