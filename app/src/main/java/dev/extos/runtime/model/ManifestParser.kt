@@ -16,6 +16,12 @@ object ManifestParser {
                 add(capabilitiesJson.getString(index))
             }
         }
+        val networkAllowlist = buildSet {
+            val domains = json.optJSONArray("networkAllowlist")
+            if (domains != null) {
+                for (index in 0 until domains.length()) add(domains.getString(index).lowercase())
+            }
+        }
 
         return PluginManifest(
             schemaVersion = json.getInt("schemaVersion"),
@@ -26,6 +32,7 @@ object ManifestParser {
             entry = json.getString("entry"),
             minRuntimeVersion = json.getString("minRuntimeVersion"),
             capabilities = capabilities,
+            networkAllowlist = networkAllowlist,
         ).also(::validate)
     }
 
@@ -40,6 +47,12 @@ object ManifestParser {
         require(manifest.capabilities.all { it in CapabilityCatalog.supported }) {
             "Manifest requests an unknown capability"
         }
+        require(manifest.networkAllowlist.all { it.matches(Regex("^[a-z0-9](?:[a-z0-9.-]*[a-z0-9])?$")) }) {
+            "Invalid network allowlist host"
+        }
+        require("network.fetch" !in manifest.capabilities || manifest.networkAllowlist.isNotEmpty()) {
+            "network.fetch requires a non-empty networkAllowlist"
+        }
     }
 
     private fun isSafeRelativePath(path: String): Boolean {
@@ -50,5 +63,5 @@ object ManifestParser {
 }
 
 object CapabilityCatalog {
-    val supported = setOf("runtime.version", "ui.toast", "storage.private")
+    val supported = setOf("runtime.version", "ui.toast", "storage.private", "network.fetch")
 }

@@ -15,6 +15,10 @@ android {
         versionName = "0.1.0"
     }
 
+    buildFeatures {
+        buildConfig = true
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = true
@@ -28,6 +32,7 @@ android {
 
 dependencies {
     implementation("androidx.appcompat:appcompat:1.7.0")
+    implementation("org.bouncycastle:bcprov-jdk18on:1.85")
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.json:json:20240303")
 }

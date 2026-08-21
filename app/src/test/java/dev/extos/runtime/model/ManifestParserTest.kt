@@ -26,6 +26,22 @@ class ManifestParserTest {
         }
     }
 
+    @Test
+    fun parsesNetworkAllowlist() {
+        val source = validManifest()
+            .replace("\"runtime.version\"", "\"runtime.version\", \"network.fetch\"")
+            .replace("\n}", ",\n  \"networkAllowlist\": [\"api.example.com\"]\n}")
+        val manifest = ManifestParser.parse(source)
+        assertEquals(setOf("api.example.com"), manifest.networkAllowlist)
+    }
+
+    @Test
+    fun rejectsNetworkCapabilityWithoutAllowlist() {
+        assertThrows(IllegalArgumentException::class.java) {
+            ManifestParser.parse(validManifest().replace("runtime.version", "network.fetch"))
+        }
+    }
+
     private fun validManifest() = """
         {
           "schemaVersion": 1,

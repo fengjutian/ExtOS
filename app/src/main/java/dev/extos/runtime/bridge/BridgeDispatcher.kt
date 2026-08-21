@@ -3,6 +3,7 @@ package dev.extos.runtime.bridge
 import dev.extos.runtime.security.CapabilityDeniedException
 import dev.extos.runtime.security.CapabilityPolicy
 import dev.extos.runtime.storage.PluginStorage
+import dev.extos.runtime.network.NetworkClient
 import org.json.JSONException
 import org.json.JSONObject
 
@@ -11,6 +12,7 @@ private const val MAX_REQUEST_BYTES = 16 * 1024
 class BridgeDispatcher(
     private val policy: CapabilityPolicy,
     private val storage: PluginStorage? = null,
+    private val network: NetworkClient? = null,
     private val showToast: (String) -> Unit,
 ) {
     fun dispatch(source: String): String {
@@ -59,6 +61,10 @@ class BridgeDispatcher(
                     requireStorage().clear()
                     JSONObject.NULL
                 }
+                "network.fetch" -> {
+                    policy.require("network.fetch")
+                    requireNetwork().fetch(params(request).getString("url"))
+                }
                 else -> throw NoSuchMethodException("Unknown bridge method: $method")
             }
             success(id, result)
@@ -72,6 +78,9 @@ class BridgeDispatcher(
 
     private fun requireStorage(): PluginStorage = storage
         ?: error("Plugin storage is unavailable")
+
+    private fun requireNetwork(): NetworkClient = network
+        ?: error("Plugin network client is unavailable")
 
     private fun success(id: String, result: Any): String = JSONObject()
         .put("id", id)

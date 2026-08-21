@@ -6,3 +6,7 @@ local.properties
 captures/
 .externalNativeBuild/
 .cxx/
+keys/
+*.publisher-key.json
+
+.qode

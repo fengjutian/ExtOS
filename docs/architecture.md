@@ -62,6 +62,8 @@ closed.
 
 Plugin HTML and JavaScript are untrusted. A package signature identifies a
 publisher and protects integrity; it does not make plugin behavior trustworthy.
+Release builds reject unsigned packages. After first acceptance, publisher-key
+continuity is enforced for updates sharing the same plugin ID.
 
 No Android object, filesystem path, ContentProvider, raw Intent, or unrestricted
 network client is exposed through the JavaScript bridge. Bridge methods accept

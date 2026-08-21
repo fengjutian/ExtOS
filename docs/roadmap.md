@@ -18,7 +18,8 @@ compilation in an Android-capable environment.
   installed plugins; instrumentation tests remain);
 - define JSON request/response bridge protocol (initial draft implemented);
 - lifecycle events and structured errors (ready event and error envelope implemented);
-- Ext CLI: `create`, `dev`, `build`, and `install`;
+- JVM CLI `create`, `build`, `inspect`, `keygen`, and `sign` implemented; `dev`
+  and device `install` remain;
 - package parser with ZIP path and expanded-size safety limits (implemented);
 - automated unit and instrumentation tests.
 
@@ -28,16 +29,17 @@ package without editing the host.
 ## Phase 2: user-safe installation
 
 - plugin registry, staged installation, atomic activation, and rollback foundation
-  (implemented; Android UI integration remains);
+  (implemented and connected to the Android UI);
 - Android document picker, install review, capability grant persistence, launcher,
   and active-plugin loading (implemented in source form);
 - plugin management UI for version activation, inactive-version deletion,
   permission changes, data clearing, and uninstall (implemented in source form);
 - startup repair of abandoned staging directories and missing/corrupt active
   version markers (implemented);
-- plugin-scoped storage and data removal;
-- permission review and grant UI;
-- package hashing and publisher signatures;
+- plugin-scoped storage and data removal (implemented);
+- permission review and grant UI (implemented);
+- SHA-256 file tables and Ed25519 package verification (implemented); publisher
+  trust, revocation, and registry attestations remain;
 - rollback, quarantine, and audit records.
 
 Exit criterion: packages from multiple publishers can be managed without sharing
@@ -46,6 +48,8 @@ data or undeclared capabilities.
 ## Phase 3: platform APIs
 
 - plugin-private JSON storage with quota and atomic writes (implemented);
+- allowlisted HTTPS GET capability with private-address, redirect, timeout, and
+  response-size controls (implemented);
 - notifications, network policy, file picker, sharing, and approximate location;
 - background work with quotas and visible user controls;
 - declarative plugin intents and explicit composition;
@@ -60,7 +64,7 @@ data or undeclared capabilities.
 
 ## Immediate next tasks
 
-1. Compile and run the Phase 0 host with JDK 17 and Android SDK 35.
-2. Add JVM tests for manifest validation and capability denial.
-3. Implement a safe archive validator without extracting untrusted files first.
-4. replace the synchronous demonstration bridge with message-based async IPC.
+1. Compile the host and CLI with JDK 17 and Android SDK 35, then run all tests.
+2. Add WebView origin/navigation instrumentation tests on an Android emulator.
+3. Add signed key-rotation records, revocation, and registry attestations.
+4. Implement CLI `dev` and device `install` after ADB is available.

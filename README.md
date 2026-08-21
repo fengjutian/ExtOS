@@ -24,6 +24,8 @@ bridge.
 - `docs/package-format.md` — initial `.ext` package specification
 - `docs/bridge-protocol.md` — asynchronous host/plugin message contract
 - `docs/sdk.md` — current JavaScript SDK surface
+- `docs/cli.md` — package creation, inspection, and Ed25519 signing
+- `docs/network.md` — allowlisted HTTPS bridge policy
 - `docs/roadmap.md` — delivery phases and acceptance criteria
 - `app/` — Android host and bundled example plugin
 
@@ -64,8 +66,11 @@ On Windows, build the included example into an installable development package:
 powershell -ExecutionPolicy Bypass -File tools/build-sample.ps1
 ```
 
-The package is written to `build/sample/hello.ext`. It is unsigned and intended
-only for local development.
+The package is written to `build/sample/hello.ext`. It is unsigned, intended
+only for local development, and accepted only by Debug builds.
+
+With JDK 17 and Gradle available, the cross-platform CLI can create, inspect,
+key-generate, and sign packages. See `docs/cli.md`.
 
 ## Status
 

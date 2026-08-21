@@ -1,7 +1,8 @@
 # Ext package format, draft 0
 
 An `.ext` file is a ZIP archive with normalized UTF-8 paths. The root contains a
-manifest, plugin content, an icon, and eventually a detached signature.
+manifest, plugin content, optional presentation assets, and optional signature
+metadata.
 
 ```text
 example.ext
@@ -9,6 +10,7 @@ example.ext
   dist/index.html
   dist/app.js
   icon.png
+  integrity.json
   signature.json
 ```
 
@@ -23,7 +25,8 @@ example.ext
   "runtime": "web",
   "entry": "dist/index.html",
   "minRuntimeVersion": "0.1.0",
-  "capabilities": ["runtime.version", "ui.toast"]
+  "capabilities": ["runtime.version", "ui.toast"],
+  "networkAllowlist": []
 }
 ```
 
@@ -40,12 +43,23 @@ example.ext
 
 ## Signatures
 
-Remote distribution will require a publisher signature over a canonical manifest
-and a sorted table of file paths and SHA-256 digests. Key identity, rotation,
-revocation, timestamping, and registry attestations remain open design work.
+Signed packages include `integrity.json`, containing the SHA-256 digest of every
+non-signature file, and `signature.json`. Ed25519 signs UTF-8 records sorted by
+path, with each record encoded as `path + NUL + lowercaseHash + LF`. The key ID
+is the lowercase SHA-256 digest of the raw 32-byte public key.
 
-Local unsigned packages may eventually be allowed only behind an explicit
-developer mode and must be visually distinguished from trusted packages.
+Key trust, rotation, revocation, timestamping, and registry attestations remain
+open design work. A valid self-contained signature proves integrity and stable
+publisher-key identity; it does not establish that the publisher is trustworthy.
+
+Local unsigned packages are visually distinguished from signed packages. The
+current Android host accepts them only in Debug builds; Release builds reject
+them.
+
+The host remembers the first accepted signed publisher key for each plugin ID.
+Subsequent signed updates must use the same key. Formal key-rotation records are
+not implemented yet, so uninstalling currently removes this local continuity
+record.
 
 ## Compatibility
 

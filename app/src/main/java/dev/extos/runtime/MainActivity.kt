@@ -23,6 +23,8 @@ import dev.extos.runtime.bridge.BridgeDispatcher
 import dev.extos.runtime.bridge.PluginBridge
 import dev.extos.runtime.model.ManifestParser
 import dev.extos.runtime.model.PluginManifest
+import dev.extos.runtime.network.NetworkClient
+import dev.extos.runtime.network.NetworkPolicy
 import dev.extos.runtime.packageformat.PluginPackageReader
 import dev.extos.runtime.packageformat.ValidatedPluginPackage
 import dev.extos.runtime.registry.InstalledPlugin
@@ -30,6 +32,7 @@ import dev.extos.runtime.registry.PluginInstaller
 import dev.extos.runtime.registry.PluginRegistry
 import dev.extos.runtime.security.CapabilityGrantStore
 import dev.extos.runtime.security.CapabilityPolicy
+import dev.extos.runtime.security.PublisherTrustStore
 import dev.extos.runtime.storage.PluginStorage
 import dev.extos.runtime.web.PluginContentLoader
 import java.nio.charset.StandardCharsets
@@ -40,6 +43,7 @@ class MainActivity : AppCompatActivity() {
     private val registry by lazy { PluginRegistry(pluginRoot) }
     private val installer by lazy { PluginInstaller(pluginRoot, registry) }
     private val grantStore by lazy { CapabilityGrantStore(this) }
+    private val publisherTrustStore by lazy { PublisherTrustStore(this) }
     private var pluginView: WebView? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -197,6 +201,7 @@ class MainActivity : AppCompatActivity() {
             .setPositiveButton("Uninstall") { _, _ ->
                 registry.uninstall(manifest.id)
                 grantStore.remove(manifest.id)
+                publisherTrustStore.remove(manifest.id)
                 PluginStorage(pluginDataDirectory(manifest.id)).clear()
                 showHome()
             }
@@ -233,6 +238,17 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun confirmInstallation(plugin: ValidatedPluginPackage) {
+        if (plugin.publisherKeyId == null && !BuildConfig.DEBUG) {
+            showError(IllegalArgumentException("Release builds do not install unsigned packages"))
+            return
+        }
+        val compatibility = runCatching {
+            publisherTrustStore.requireCompatible(plugin.manifest.id, plugin.publisherKeyId)
+        }
+        if (compatibility.isFailure) {
+            showError(compatibility.exceptionOrNull()!!)
+            return
+        }
         val manifest = plugin.manifest
         val capabilityText = if (manifest.capabilities.isEmpty()) {
             "This plugin requests no host capabilities."
@@ -240,11 +256,18 @@ class MainActivity : AppCompatActivity() {
             "Requested capabilities:\n\n" +
                 manifest.capabilities.sorted().joinToString("\n") { "- $it" }
         }
+        val networkText = if (manifest.networkAllowlist.isEmpty()) "" else {
+            "\n\nAllowed network hosts:\n" +
+                manifest.networkAllowlist.sorted().joinToString("\n") { "- $it" }
+        }
+        val publisherText = plugin.publisherKeyId?.let {
+            "Verified package integrity\nPublisher key: $it"
+        } ?: "Unsigned development package"
         AlertDialog.Builder(this)
             .setTitle("Install ${manifest.name} ${manifest.version}?")
             .setMessage(
-                "Publisher signatures are not implemented yet. " +
-                    "Install only packages you trust.\n\n$capabilityText",
+                "$publisherText\n\n$capabilityText$networkText\n\n" +
+                    "A verified key proves package integrity, not publisher trust.",
             )
             .setNegativeButton("Cancel", null)
             .setPositiveButton("Install") { _, _ -> installPackage(plugin) }
@@ -253,7 +276,10 @@ class MainActivity : AppCompatActivity() {
 
     private fun installPackage(plugin: ValidatedPluginPackage) {
         Thread {
-            val result = runCatching { installer.install(plugin) }
+            val result = runCatching {
+                publisherTrustStore.remember(plugin.manifest.id, plugin.publisherKeyId)
+                installer.install(plugin)
+            }
             runOnUiThread {
                 result.onSuccess {
                     grantStore.replace(plugin.manifest.id, plugin.manifest.capabilities)
@@ -307,6 +333,7 @@ class MainActivity : AppCompatActivity() {
                     }
                 },
                 storage = PluginStorage(pluginDataDirectory(manifest.id)),
+                network = NetworkClient(NetworkPolicy(manifest.networkAllowlist)),
             )
             addJavascriptInterface(PluginBridge(this, dispatcher), "ExtOSNative")
             loadUrl(contentLoader.origin + entry)

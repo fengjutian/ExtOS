@@ -17,6 +17,9 @@ await ext.storage.set('settings', { theme: 'dark' });
 const settings = await ext.storage.get('settings');
 await ext.storage.remove('settings');
 await ext.storage.clear();
+
+const response = await ext.network.fetch('https://api.example.com/data');
+console.log(response.status, response.body);
 ```
 
 Bridge calls time out after 15 seconds. Lifecycle subscriptions return an
@@ -29,3 +32,8 @@ const unsubscribe = ext.lifecycle.on('suspend', () => saveDraft());
 Available lifecycle names are `ready`, `resume`, `suspend`, and `shutdown`.
 Storage is private to a plugin ID, persists across version upgrades, and is
 currently limited to 1 MiB of encoded JSON.
+
+`network.fetch` currently supports bounded HTTPS GET requests only. The exact
+hostname must appear in the manifest's `networkAllowlist`; redirects, private
+addresses, URL credentials, non-standard ports, and responses above 1 MiB are
+rejected.

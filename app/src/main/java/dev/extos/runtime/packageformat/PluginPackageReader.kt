@@ -8,10 +8,12 @@ import java.nio.charset.CodingErrorAction
 data class ValidatedPluginPackage(
     val manifest: PluginManifest,
     val files: Map<String, ByteArray>,
+    val publisherKeyId: String?,
 )
 
 class PluginPackageReader(
     private val archiveValidator: ArchiveValidator = ArchiveValidator(),
+    private val signatureVerifier: PackageSignatureVerifier = PackageSignatureVerifier(),
 ) {
     fun read(source: InputStream): ValidatedPluginPackage {
         val archive = archiveValidator.read(source)
@@ -31,6 +33,7 @@ class PluginPackageReader(
             throw InvalidPackageException("Invalid manifest: ${error.message ?: "unknown error"}")
         }
         archive.requireFile(manifest.entry)
-        return ValidatedPluginPackage(manifest, archive.files)
+        val publisherKeyId = signatureVerifier.verifyIfPresent(archive.files)
+        return ValidatedPluginPackage(manifest, archive.files, publisherKeyId)
     }
 }

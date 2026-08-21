@@ -16,3 +16,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "ExtOS"
 include(":app")
+include(":cli")

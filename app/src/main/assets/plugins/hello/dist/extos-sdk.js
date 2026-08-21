@@ -46,6 +46,9 @@
       set: function (key, value) { return call('storage.set', { key: key, value: value }); },
       remove: function (key) { return call('storage.remove', { key: key }); },
       clear: function () { return call('storage.clear'); }
+    }),
+    network: Object.freeze({
+      fetch: function (url) { return call('network.fetch', { url: url }); }
     })
   });
 })(window);

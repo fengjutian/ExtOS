@@ -9,4 +9,5 @@ data class PluginManifest(
     val entry: String,
     val minRuntimeVersion: String,
     val capabilities: Set<String>,
+    val networkAllowlist: Set<String> = emptySet(),
 )
