@@ -74,6 +74,48 @@ class PluginInstallerTest {
         }
     }
 
+    @Test
+    fun deletesInactiveVersionAndUninstallsPlugin() {
+        val root = temporaryFolder.newFolder("plugins").toPath()
+        val registry = PluginRegistry(root)
+        val installer = PluginInstaller(root, registry)
+        installer.install(pluginPackage("0.1.0"))
+        installer.install(pluginPackage("0.2.0"), activate = false)
+
+        registry.deleteVersion("dev.extos.example", "0.2.0")
+        assertEquals(listOf("0.1.0"), registry.list().map { it.version })
+
+        registry.uninstall("dev.extos.example")
+        assertTrue(registry.list().isEmpty())
+    }
+
+    @Test
+    fun refusesToDeleteActiveVersion() {
+        val root = temporaryFolder.newFolder("plugins").toPath()
+        val registry = PluginRegistry(root)
+        PluginInstaller(root, registry).install(pluginPackage("0.1.0"))
+        assertThrows(IllegalArgumentException::class.java) {
+            registry.deleteVersion("dev.extos.example", "0.1.0")
+        }
+    }
+
+    @Test
+    fun repairsMissingActiveVersionAndCleansStaging() {
+        val root = temporaryFolder.newFolder("plugins").toPath()
+        val registry = PluginRegistry(root)
+        val installer = PluginInstaller(root, registry)
+        installer.install(pluginPackage("0.9.0"), activate = false)
+        installer.install(pluginPackage("1.0.0"), activate = false)
+        val abandoned = root.resolve(".staging").resolve("abandoned")
+        Files.createDirectories(abandoned)
+        Files.writeString(abandoned.resolve("partial"), "data")
+
+        registry.repair()
+
+        assertEquals("1.0.0", registry.activeVersion("dev.extos.example"))
+        assertFalse(Files.exists(abandoned))
+    }
+
     private fun pluginPackage(version: String): ByteArrayInputStream {
         val manifest = """
             {

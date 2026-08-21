@@ -2,6 +2,7 @@ package dev.extos.runtime.bridge
 
 import dev.extos.runtime.security.CapabilityDeniedException
 import dev.extos.runtime.security.CapabilityPolicy
+import dev.extos.runtime.storage.PluginStorage
 import org.json.JSONException
 import org.json.JSONObject
 
@@ -9,6 +10,7 @@ private const val MAX_REQUEST_BYTES = 16 * 1024
 
 class BridgeDispatcher(
     private val policy: CapabilityPolicy,
+    private val storage: PluginStorage? = null,
     private val showToast: (String) -> Unit,
 ) {
     fun dispatch(source: String): String {
@@ -36,6 +38,27 @@ class BridgeDispatcher(
                     showToast(message)
                     JSONObject.NULL
                 }
+                "storage.get" -> {
+                    policy.require("storage.private")
+                    val value = requireStorage().get(params(request).getString("key"))
+                    value ?: JSONObject.NULL
+                }
+                "storage.set" -> {
+                    policy.require("storage.private")
+                    val params = params(request)
+                    require(params.has("value")) { "Storage value is required" }
+                    requireStorage().set(params.getString("key"), params.get("value"))
+                    JSONObject.NULL
+                }
+                "storage.remove" -> {
+                    policy.require("storage.private")
+                    requireStorage().remove(params(request).getString("key"))
+                }
+                "storage.clear" -> {
+                    policy.require("storage.private")
+                    requireStorage().clear()
+                    JSONObject.NULL
+                }
                 else -> throw NoSuchMethodException("Unknown bridge method: $method")
             }
             success(id, result)
@@ -43,6 +66,12 @@ class BridgeDispatcher(
             failure(requestId, error)
         }
     }
+
+    private fun params(request: JSONObject): JSONObject = request.optJSONObject("params")
+        ?: throw IllegalArgumentException("Request params must be an object")
+
+    private fun requireStorage(): PluginStorage = storage
+        ?: error("Plugin storage is unavailable")
 
     private fun success(id: String, result: Any): String = JSONObject()
         .put("id", id)

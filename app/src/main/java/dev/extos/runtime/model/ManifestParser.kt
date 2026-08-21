@@ -50,5 +50,5 @@ object ManifestParser {
 }
 
 object CapabilityCatalog {
-    val supported = setOf("runtime.version", "ui.toast")
+    val supported = setOf("runtime.version", "ui.toast", "storage.private")
 }

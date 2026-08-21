@@ -31,6 +31,10 @@ package without editing the host.
   (implemented; Android UI integration remains);
 - Android document picker, install review, capability grant persistence, launcher,
   and active-plugin loading (implemented in source form);
+- plugin management UI for version activation, inactive-version deletion,
+  permission changes, data clearing, and uninstall (implemented in source form);
+- startup repair of abandoned staging directories and missing/corrupt active
+  version markers (implemented);
 - plugin-scoped storage and data removal;
 - permission review and grant UI;
 - package hashing and publisher signatures;
@@ -41,6 +45,7 @@ data or undeclared capabilities.
 
 ## Phase 3: platform APIs
 
+- plugin-private JSON storage with quota and atomic writes (implemented);
 - notifications, network policy, file picker, sharing, and approximate location;
 - background work with quotas and visible user controls;
 - declarative plugin intents and explicit composition;

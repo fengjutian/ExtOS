@@ -6,5 +6,5 @@
   "runtime": "web",
   "entry": "dist/index.html",
   "minRuntimeVersion": "0.1.0",
-  "capabilities": ["runtime.version", "ui.toast"]
+  "capabilities": ["runtime.version", "ui.toast", "storage.private"]
 }

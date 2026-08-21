@@ -23,6 +23,7 @@ bridge.
 - `docs/architecture.md` — runtime architecture and trust boundaries
 - `docs/package-format.md` — initial `.ext` package specification
 - `docs/bridge-protocol.md` — asynchronous host/plugin message contract
+- `docs/sdk.md` — current JavaScript SDK surface
 - `docs/roadmap.md` — delivery phases and acceptance criteria
 - `app/` — Android host and bundled example plugin
 
